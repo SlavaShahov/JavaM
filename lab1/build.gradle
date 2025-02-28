@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'com.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+}
+
+application {
+    mainClass = 'com.example.Main' // Укажите главный класс вашего приложения
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.example.Main' // Укажите главный класс для JAR
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    archiveBaseName = 'lab1' // Имя JAR-файла
+    archiveVersion = '' // Уберите версию из имени JAR
+}
+
+test {
+    useJUnitPlatform()
+}
