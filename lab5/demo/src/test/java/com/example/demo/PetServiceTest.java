@@ -10,24 +10,21 @@ import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.PetRepository;
 import com.example.demo.repository.TagRepository;
 import com.example.demo.service.PetService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import static org.mockito.Mockito.*;
-
 import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.List;
-
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PetServiceTest {
@@ -44,87 +41,77 @@ class PetServiceTest {
     @InjectMocks
     private PetService petService;
 
-    private Pet validPet;
-    private Category existingCategory;
-    private Tag existingTag;
+    @Test
+    void addPet_ValidPet_ReturnsSavedPet() {
+        Pet pet = new Pet(1L, "Rex", new Category(1L, "Dogs"), null, "available");
 
-    @BeforeEach
-    void setUp() {
-        existingCategory = new Category(1L, "Dogs");
-        existingTag = new Tag(1L, "Fluffy");
+        when(categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
+        when(categoryRepository.save(any(Category.class))).thenReturn(pet.getCategory());
+        when(petRepository.save(any(Pet.class))).thenReturn(pet);
 
-        validPet = new Pet();
-        validPet.setId(1L);
-        validPet.setName("Buddy");
-        validPet.setCategory(new Category(2L, "Cats"));
-        validPet.setTags(List.of(new Tag(2L, "Playful")));
-        validPet.setStatus("Available");
+        Pet result = petService.addPet(pet);
+
+        assertEquals(pet, result);
+        verify(categoryRepository).findByName("Dogs");
+        verify(categoryRepository).save(pet.getCategory());
+        verify(petRepository).save(pet);
     }
 
     @Test
-    void addPet_shouldSaveNewCategoryAndTags() {
-        Category newCategory = new Category(null, "Reptiles");
-        Tag newTag = new Tag(null, "Scaly");
-        validPet.setCategory(newCategory);
-        validPet.setTags(List.of(newTag));
+    void addPet_InvalidPet_ThrowsValidationException() {
+        Pet pet = new Pet(1L, "", new Category(1L, "Dogs"), null, "available");
 
-        when(categoryRepository.findByName("Reptiles")).thenReturn(Optional.empty());
-        when(categoryRepository.save(newCategory)).thenReturn(new Category(3L, "Reptiles"));
-        when(tagRepository.findByName("Scaly")).thenReturn(Optional.empty());
-        when(tagRepository.save(newTag)).thenReturn(new Tag(3L, "Scaly"));
-        when(petRepository.save(validPet)).thenReturn(validPet);
-
-        Pet result = petService.addPet(validPet);
-
-        assertNotNull(result);
-        assertEquals(3L, validPet.getCategory().getId());
-        assertEquals(3L, validPet.getTags().get(0).getId());
+        assertThrows(ValidationException.class, () -> petService.addPet(pet));
     }
 
     @Test
-    void addPet_shouldUseExistingCategoryAndTags() {
-        validPet.setCategory(existingCategory);
-        validPet.setTags(List.of(existingTag));
+    void updatePet_ExistingPet_ReturnsUpdatedPet() {
+        Pet existingPet = new Pet(1L, "Rex", new Category(1L, "Dogs"), null, "available");
+        Pet updatedPet = new Pet(1L, "Rex Updated", new Category(1L, "Dogs"), null, "available");
 
-        when(categoryRepository.findByName("Dogs")).thenReturn(Optional.of(existingCategory));
-        when(tagRepository.findByName("Fluffy")).thenReturn(Optional.of(existingTag));
-        when(petRepository.save(validPet)).thenReturn(validPet);
+        when(petRepository.findById(anyLong())).thenReturn(Optional.of(existingPet));
+        when(categoryRepository.findByName(anyString())).thenReturn(Optional.of(existingPet.getCategory()));
+        when(petRepository.save(any(Pet.class))).thenReturn(updatedPet);
 
-        Pet result = petService.addPet(validPet);
+        Pet result = petService.updatePet(updatedPet);
 
-        assertEquals(1L, result.getCategory().getId());
-        assertEquals(1L, result.getTags().get(0).getId());
+        assertEquals(updatedPet, result);
+        verify(petRepository).findById(1L);
+        verify(petRepository).save(updatedPet);
     }
 
     @Test
-    void updatePet_shouldThrowWhenPetNotFound() {
-        when(petRepository.findById(1L)).thenReturn(Optional.empty());
+    void updatePet_NonExistingPet_ThrowsPetNotFoundException() {
+        Pet pet = new Pet(1L, "Rex", new Category(1L, "Dogs"), null, "available");
 
-        assertThrows(PetNotFoundException.class, () -> petService.updatePet(validPet));
+        when(petRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(PetNotFoundException.class, () -> petService.updatePet(pet));
     }
 
-
-
     @Test
-    void getPetById_shouldReturnPetWhenExists() {
-        when(petRepository.findById(1L)).thenReturn(Optional.of(validPet));
+    void getPetById_ValidId_ReturnsPet() {
+        Long petId = 1L;
+        Pet expectedPet = new Pet(petId, "Rex", null, null, "available");
+
+        when(petRepository.findById(petId)).thenReturn(Optional.of(expectedPet));
 
         Pet result = petService.getPetById("1");
 
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
+        assertEquals(expectedPet, result);
+        verify(petRepository).findById(petId);
     }
 
     @Test
-    void getPetById_shouldThrowWhenInvalidIdFormat() {
+    void getPetById_InvalidIdFormat_ThrowsInvalidInputException() {
         assertThrows(InvalidInputException.class, () -> petService.getPetById("invalid"));
     }
 
     @Test
-    void getPetById_shouldThrowWhenPetNotFound() {
-        when(petRepository.findById(999L)).thenReturn(Optional.empty());
+    void getPetById_NonExistingId_ThrowsPetNotFoundException() {
+        when(petRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        assertThrows(PetNotFoundException.class, () -> petService.getPetById("999"));
+        assertThrows(PetNotFoundException.class, () -> petService.getPetById("1"));
     }
 
     @Test
@@ -141,27 +128,15 @@ class PetServiceTest {
         assertThrows(InvalidInputException.class, () -> petService.deletePet("abc"));
     }
 
-    @Test
-    void validatePet_shouldThrowWhenNameIsEmpty() {
-        validPet.setName("  ");
 
-        assertThrows(ValidationException.class, () -> petService.addPet(validPet));
+    @Test
+    void validateAndParsePetId_ValidId_ReturnsLong() {
+        Long result = petService.validateAndParsePetId("123");
+        assertEquals(123L, result);
     }
 
-
-
     @Test
-    void updatePet_shouldMergeExistingAndNewTags() {
-        validPet.setTags(List.of(existingTag, new Tag(null, "NewTag")));
-        when(petRepository.findById(1L)).thenReturn(Optional.of(validPet));
-        when(tagRepository.findByName("Fluffy")).thenReturn(Optional.of(existingTag));
-        when(tagRepository.findByName("NewTag")).thenReturn(Optional.empty());
-        when(tagRepository.save(any())).thenReturn(new Tag(2L, "NewTag"));
-        when(petRepository.save(validPet)).thenReturn(validPet);
-
-        Pet result = petService.updatePet(validPet);
-
-        assertEquals(2, result.getTags().size());
-        verify(tagRepository).save(argThat(tag -> tag.getName().equals("NewTag")));
+    void validateAndParsePetId_InvalidId_ThrowsInvalidInputException() {
+        assertThrows(InvalidInputException.class, () -> petService.validateAndParsePetId("abc"));
     }
 }

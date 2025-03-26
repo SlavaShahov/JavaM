@@ -92,7 +92,7 @@ public class PetService {
         petRepository.deleteById(id);
     }
 
-    private Long validateAndParsePetId(String petId) {
+    public Long validateAndParsePetId(String petId) {
         try {
             return Long.valueOf(petId);
         } catch (NumberFormatException e) {

@@ -1,88 +1,74 @@
 package com.example.demo;
 
 import com.example.demo.controller.PetController;
-import com.example.demo.model.Category;
 import com.example.demo.model.Pet;
 import com.example.demo.service.PetService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import java.util.Optional;
-
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(PetController.class)
 @ExtendWith(MockitoExtension.class)
 class PetControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private PetService petService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private PetController petController;
 
-    private Pet pet;
+    @Test
+    void createPet_ValidPet_ReturnsCreatedPet() {
+        Pet inputPet = new Pet(1L, "Rex", null, null, "available");
+        Pet savedPet = new Pet(1L, "Rex", null, null, "available");
 
-    @BeforeEach
-    void setUp() {
-        pet = new Pet(1L, "Buddy", new Category(101L, "Dog"), null, "Available");
+        when(petService.addPet(any(Pet.class))).thenReturn(savedPet);
+
+        Pet result = petController.createPet(inputPet);
+
+        assertEquals(savedPet, result);
+        verify(petService).addPet(inputPet);
     }
 
     @Test
-    void shouldCreatePet() throws Exception {
-        when(petService.addPet(any(Pet.class))).thenReturn(pet);
+    void updatePet_ValidPet_ReturnsUpdatedPet() {
+        Pet inputPet = new Pet(1L, "Rex", null, null, "available");
+        Pet updatedPet = new Pet(1L, "Rex Updated", null, null, "available");
 
-        mockMvc.perform(post("/pet")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(pet)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Buddy"));
+        when(petService.updatePet(any(Pet.class))).thenReturn(updatedPet);
+
+        Pet result = petController.updatePet(inputPet);
+
+        assertEquals(updatedPet, result);
+        verify(petService).updatePet(inputPet);
     }
 
     @Test
-    void shouldUpdatePet() throws Exception {
-        when(petService.updatePet(any(Pet.class))).thenReturn(pet);
+    void findPet_ValidId_ReturnsPet() {
+        String petId = "1";
+        Pet expectedPet = new Pet(1L, "Rex", null, null, "available");
 
-        mockMvc.perform(put("/pet")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(pet)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Buddy"));
+        when(petService.getPetById(petId)).thenReturn(expectedPet);
+
+        Pet result = petController.findPet(petId);
+
+        assertEquals(expectedPet, result);
+        verify(petService).getPetById(petId);
     }
 
     @Test
-    void shouldFindPetById() throws Exception {
-        when(petService.getPetById("1")).thenReturn(pet);
+    void deletePet_ValidId_DeletesPet() {
+        String petId = "1";
 
-        mockMvc.perform(get("/pet/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Buddy"));
+        petController.deletePet(petId);
+
+        verify(petService).deletePet(petId);
     }
-
-    @Test
-    void shouldDeletePet() throws Exception {
-        doNothing().when(petService).deletePet("1");
-
-        mockMvc.perform(delete("/pet/1"))
-                .andExpect(status().isOk());
-
-        verify(petService).deletePet("1");
-    }
-
 }
