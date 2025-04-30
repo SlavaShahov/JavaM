@@ -1,0 +1,32 @@
+server:
+  port: 8086
+
+spring:
+  datasource:
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/deliverysecurity
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog.sql
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/my-realm
+
+jwt:
+  secret: r1Wq3Y7Ql8ivrpC4A6vEgBg1kllCKCrFkwhbZUNZ6Y8=
+  lifetime: 30m
+
+keycloak:
+  realm: my-realm
+  auth-server-url: http://localhost:8080
+  resource: my-app
+  credentials:
+    secret: qM62BBvSunLnox3H4fzV9MKrfg0VN5wD
+  public-client: false
+  principal-attribute: preferred_username
+
+
+

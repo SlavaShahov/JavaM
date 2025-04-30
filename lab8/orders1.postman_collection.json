@@ -1,0 +1,111 @@
+{
+	"info": {
+		"_postman_id": "3cf162b5-64e8-475a-a463-171713134e4b",
+		"name": "orders1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28291878"
+	},
+	"item": [
+		{
+			"name": "CreateUser",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"123a\",\n    \"address\": {\n        \"city\": \"nsk\",\n        \"street\": \"ghj\",\n        \"zipcode\": \"123\"\n    },\n    \"username\": \"123a\",\n    \"password\": \"123a\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Auth",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjNAbWFpbC5ydSIsInVzZXJJZCI6IjMiLCJpYXQiOjE3NDQwMTMzNzUsImV4cCI6MTc0NDAxNTE3NX0.ufOOqhX76LFFPF1XChYIxD_IJ4oByKhk9mbZP2Kb3I0",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"123a\",\n    \"address\": \"nsk\",\n    \"username\": \"123a\",\n    \"password\": \"123a\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "5a474e67-161f-46f8-9656-97ac9ee67dac",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/orders",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"orders"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

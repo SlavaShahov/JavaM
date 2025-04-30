@@ -1,0 +1,16 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: orders
+    servlet:
+      contextPath: /api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog.sql
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
